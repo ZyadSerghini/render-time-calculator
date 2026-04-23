@@ -1,0 +1,91 @@
+[project]
+name = "python-template"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "Zyad Serghini", email = "zserghini@aui.ma" }
+]
+requires-python = ">=3.13"
+
+[dependency-groups]
+dev = [
+    "ruff>=0.14.10",
+    "ty>=0.0.8",
+]
+
+dependencies = []
+
+[project.scripts]
+python-template = "python_template:main"
+
+[build-system]
+requires = ["uv_build>=0.9.18,<0.10.0"]
+build-backend = "uv_build"
+
+# Configuration de ruff
+[tool.ruff]
+line-length = 88                    # Longueur max des lignes (comme Black)
+target-version = "py312"            # Version Python cible
+preview = true                      # Active les règles en preview (inclut plus de règles E)
+
+[tool.ruff.lint]
+preview = true                      # Active les règles de lint en preview
+# Activer les règles de linting
+select = [
+    "E",      # pycodestyle errors
+    "W",      # pycodestyle warnings
+    "F",      # Pyflakes
+    "I",      # isort (tri des imports)
+    "B",      # flake8-bugbear (détection de bugs)
+    "UP",     # pyupgrade (modernisation du code)
+]
+
+# Extend selection to include rules that are off by default
+extend-select = [
+    "E111",   # indentation is not a multiple of 4
+    "E225",   # missing whitespace around operator
+    "E231",   # missing whitespace after ','
+]
+
+# Ignorer certaines règles si nécessaire
+ignore = [
+    "E501",   # Ignorer les lignes trop longues (le formateur s'en occupe)
+]
+
+# Autoriser la correction automatique
+fixable = ["ALL"]
+unfixable = []
+
+[tool.ruff.format]
+quote-style = "double"              # Guillemets doubles
+indent-style = "space"              # Indentation avec espaces
+skip-magic-trailing-comma = false   # Conserver les virgules finales
+
+# Configuration de ty (vérificateur de types)
+[tool.ty]
+# Niveau de diagnostic pour chaque type de problème
+[tool.ty.rules]
+unresolved-reference = "error"      # Références non résolues → erreur
+invalid-assignment = "error"        # Assignations invalides → erreur
+invalid-argument-type = "error"     # Types d'arguments invalides → erreur
+call-non-callable = "error"         # Appel d'objets non-callables → erreur
+deprecated = "warn"                 # Utilisation de code déprécié → avertissement
+redundant-cast = "warn"             # Cast redondant → avertissement
+
+# Configuration de l'environnement
+[tool.ty.environment]
+python-version = "3.13"             # Version Python pour la vérification
+python = ".venv"                    # Chemin vers l'environnement virtuel
+
+# Fichiers à analyser
+[tool.ty.src]
+include = ["src", "test_linting.py"]  # Fichiers/dossiers à vérifier
+exclude = ["tests", "build"]        # Fichiers/dossiers à ignorer
+respect-ignore-files = true         # Respecter .gitignore
+
+# Format de sortie
+[tool.ty.terminal]
+output-format = "full"              # "full" ou "concise"
+error-on-warning = false            # Ne pas échouer sur les avertissements
+

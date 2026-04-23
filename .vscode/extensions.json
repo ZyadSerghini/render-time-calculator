@@ -1,0 +1,13 @@
+{
+    "recommendations": [
+        "ms-python.python",
+        "kevinrose.vsc-python-indent",
+        "njpwerner.autodocstring",
+        "pkief.material-icon-theme",
+        "mhutchie.git-graph",
+        "charliermarsh.ruff",
+        "davidanson.vscode-markdownlint",
+        "astral-sh.ty",
+        "tamasfe.even-better-toml"
+    ]
+}
