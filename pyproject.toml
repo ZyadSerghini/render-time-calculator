@@ -7,6 +7,11 @@ authors = [
     { name = "Zyad Serghini", email = "zserghini@aui.ma" }
 ]
 requires-python = ">=3.13"
+dependencies = [
+    "pandas>=3.0.2",
+    "scikit-learn>=1.8.0",
+    "xgboost>=3.2.0",
+]
 
 [dependency-groups]
 dev = [
