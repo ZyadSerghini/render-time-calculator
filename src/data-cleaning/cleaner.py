@@ -1,9 +1,17 @@
 import json
 import sys
 
-READ_PATH = "opendata-2026-04-10-000000+0000.jsonl"
-WRITE_PATH = "cleaned_data.csv"
+from matching import find_gpu_key
+
+BENCHMARK_READ_PATH = "data/raw/benchmark-input-files/opendata-2026-04-10-000000+0000.jsonl"
+GPU_READ_PATH = "data/processed/gpu-data.json"
+WRITE_PATH = "data/processed/cleaned_data.csv"
 METRICS = ['render_time_no_sync']
+
+stats = {
+    "total_analyzed": 0,
+    "perfect_match": 0
+}
 
 
 def main() -> None:
@@ -13,12 +21,12 @@ def main() -> None:
         )
     print()
 
-    with open(file='data.json') as gpu_datafile:
-        GPUs = data = json.load(gpu_datafile)
+    with open(file=GPU_READ_PATH) as gpu_datafile:
+        GPUs = json.load(gpu_datafile)
 
-    with open(f'input_files/{READ_PATH}') as infile, open(WRITE_PATH, 'w') as outfile:
+    with open(BENCHMARK_READ_PATH) as infile, open(WRITE_PATH, 'w') as outfile:
 
-        # outfile.write(render)
+        outfile.write("heading\n")
 
         counter = 1
         for line in infile:
@@ -28,12 +36,22 @@ def main() -> None:
                 continue
 
             device_name = data['data'][0]["device_info"]["compute_devices"][0]["name"]
-            if device_name not in GPUs.keys():
-                print(device_name)
+            device_type = data['data'][0]["device_info"]["device_type"]
 
-            # if True:  # len(data['data'][0]["device_info"]["compute_devices"]) > 1:
-            #     print(counter, data['data'][0]["device_info"]["compute_devices"][0]["name"], '\n')
+            if device_type == "CPU":
+                continue
 
+            stats["total_analyzed"] += 1
+
+            found_key, score = find_gpu_key(device_name, GPUs)
+            if score == 1:
+                stats["perfect_match"] += 1
+
+            elif score != 1 and found_key:
+                print(f'{device_name}///{found_key} {score}')
+
+            # if counter == 1:
+            #     break
             counter += 1
 
 
@@ -154,31 +172,3 @@ json_entry2 = {
     "id": "dc84efd7-2c74-4a1b-8e23-0a5",
     "schema_version": "v3"
 }
-
-# Target variable
-# render_time_no_sync
-
-# CPU features
-# cpu_threads (device_info.num_cpu_threads)
-# num_cpu_cores (system_info.num_cpu_cores)
-
-# GPU features
-# has_gpu (derived: any CUDA/OPTIX device present)
-# gpu_name (extracted from system_info.devices)
-# num_gpus (count of CUDA/OPTIX devices)
-
-# Device type
-# device_type (CPU or GPU from device_info.device_type)
-
-# Scene information
-# scene (scene.label)
-
-# Blender version
-# blender_version (blender_version.version)
-
-# Memory usage
-# peak_memory (stats.device_peak_memory)
-
-# System features (optional)
-# operating_system (system_info.system)
-# machine_architecture (system_info.machine)
