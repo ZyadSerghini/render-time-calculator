@@ -1,25 +1,36 @@
 import json
-import sys
 
 from matching import find_gpu_key
+
+from render_time_calculator.stats.stats import (
+    end_timer,
+    load_stats,
+    save_stats,
+    start_timer,
+)
 
 BENCHMARK_READ_PATH = "data/raw/benchmark-input-files/opendata-2026-04-10-000000+0000.jsonl"
 GPU_READ_PATH = "data/processed/gpu-data.json"
 WRITE_PATH = "data/processed/cleaned_data.csv"
-METRICS = ['render_time_no_sync']
 
-stats = {
-    "total_analyzed": 0,
-    "perfect_match": 0
+DEBUG = {
+    "nameMatching": False,
+    "loopLimit": False,
+    "loopLimitVal": 1000
 }
+DEBUG_PATH = "data/debug/GPU_name_matching.csv"
+
+METRICS = ['render_time_no_sync']
 
 
 def main() -> None:
-    if len(sys.argv) != 1:
-        sys.exit(
-            "ERROR: add .jsonl file as parameter.\nCorrect usage: python cleaner.py file.jsonl"
-        )
-    print()
+
+    start_timer()
+    stats = load_stats()
+
+    if DEBUG["nameMatching"]:
+        debug_file = open(DEBUG_PATH, 'w')
+        debug_file.write('device_name,matched_key,score\n')
 
     with open(file=GPU_READ_PATH) as gpu_datafile:
         GPUs = json.load(gpu_datafile)
@@ -28,7 +39,9 @@ def main() -> None:
 
         outfile.write("heading\n")
 
-        counter = 1
+        if DEBUG["loopLimit"]:
+            counter = 1
+
         for line in infile:
 
             data = json.loads(line)
@@ -38,25 +51,37 @@ def main() -> None:
             device_name = data['data'][0]["device_info"]["compute_devices"][0]["name"]
             device_type = data['data'][0]["device_info"]["device_type"]
 
+            stats["totalAnalyzed"] += 1
+
             if device_type == "CPU":
                 continue
-
-            stats["total_analyzed"] += 1
+            stats["totalGPUAnalyzed"] += 1
 
             found_key, score = find_gpu_key(device_name, GPUs)
             if score == 1:
-                stats["perfect_match"] += 1
+                stats["perfectMatch"] += 1
 
             elif score != 1 and found_key:
-                print(f'{device_name}///{found_key} {score}')
+                if DEBUG["nameMatching"]:
+                    debug_file.write(f'{device_name},{found_key},{score}\n')  # print(f'{device_name}///{found_key} {score}')
 
-            # if counter == 1:
-            #     break
-            counter += 1
+                stats["guessedMatch"] += 1
+
+            if DEBUG["loopLimit"]:
+                if counter == DEBUG["loopLimitVal"]:
+                    break
+                counter += 1
+
+    end_timer()
+    save_stats(stats)
+
+    if DEBUG["nameMatching"]:
+        debug_file.close()
 
 
 if __name__ == '__main__':
     main()
+
 
 json_entry = {
     "created_at": "2021-02-09T07:53:10.072659+00:00",

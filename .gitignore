@@ -2,3 +2,4 @@
 .ruff_cache
 src/data-cleaning/input-files/*.jsonl
 opendata-2026-04-10-000000+0000.jsonl
+__pycache__/
