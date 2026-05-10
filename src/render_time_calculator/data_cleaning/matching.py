@@ -2,6 +2,27 @@ import json
 import re
 from difflib import SequenceMatcher
 
+GENERIC_MODEL_WORDS = {
+    "geforce",
+    "radeon",
+    "quadro",
+    "tesla",
+    "graphics",
+    "series",
+    "gpu",
+    "laptop",
+}
+
+MODEL_SUFFIX_WORDS = {
+    "ti",
+    "super",
+    "xt",
+    "xtx",
+    "m",
+    "x",
+    "pro",
+}
+
 
 def normalize_gpu_name(name: str) -> str:
     name = name.lower()
@@ -65,28 +86,6 @@ def numbers_are_compatible(input_name: str, candidate_key: str) -> bool:
         return True
 
     return input_numbers == candidate_numbers
-
-
-GENERIC_MODEL_WORDS = {
-    "geforce",
-    "radeon",
-    "quadro",
-    "tesla",
-    "graphics",
-    "series",
-    "gpu",
-    "laptop",
-}
-
-MODEL_SUFFIX_WORDS = {
-    "ti",
-    "super",
-    "xt",
-    "xtx",
-    "m",
-    "x",
-    "pro",
-}
 
 
 def extract_model_signatures(name: str) -> set[str]:

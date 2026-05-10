@@ -8,7 +8,8 @@ DEFAULT_STATS = {
     "totalAnalyzed": 0,
     "totalGPUAnalyzed": 0,
     "perfectMatch": 0,
-    "guessedMatch": 0
+    "guessedMatch": 0,
+    "noMatch": 0
 }
 
 TIME_STATS = {

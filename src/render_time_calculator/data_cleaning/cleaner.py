@@ -1,6 +1,6 @@
 import json
-
-from matching import find_gpu_key
+import os
+import shutil
 
 from render_time_calculator.stats.stats import (
     end_timer,
@@ -9,38 +9,55 @@ from render_time_calculator.stats.stats import (
     start_timer,
 )
 
-BENCHMARK_READ_PATH = "data/raw/benchmark-input-files/opendata-2026-04-10-000000+0000.jsonl"
+from .matching import find_gpu_key
+
+BENCHMARK_READ_PATH = "data/raw/benchmark-input-files/"  # opendata-2026-04-10-000000+0000.jsonl
+BENCHMARK_MOVE_PATH = "data/processed/benchmark-processed-files"
 GPU_READ_PATH = "data/processed/gpu-data.json"
 WRITE_PATH = "data/processed/cleaned_data.csv"
 
 DEBUG = {
     "nameMatching": False,
     "loopLimit": False,
-    "loopLimitVal": 1000
+    "loopLimitVal": 1
 }
 DEBUG_PATH = "data/debug/GPU_name_matching.csv"
 
-METRICS = ['render_time_no_sync']
+BENCHMARK_METRICS = ('renderedObject', 'renderTime', 'gpuName', 'gpuBackend', 'peakMemory')
+GPU_METRICS = ('releaseYear', 'baseClock', 'boostClock', 'textureRate', 'pixelRate', 'architecture', 'memoryType', 'generation', 'busInterface', 'rtCores', 'tensorCores')
 
 
-def main() -> None:
+def process_benchmark_file() -> None:
 
     start_timer()
+
+    if DEBUG["nameMatching"]:
+        with open(DEBUG_PATH, 'w') as debug_file:
+            debug_file.write('device_name,matched_key,score\n')
+
+    with open(file=GPU_READ_PATH) as gpu_datafile:
+        gpu_data = json.load(gpu_datafile)
+
+    for name in os.listdir(BENCHMARK_READ_PATH):
+        filepath = BENCHMARK_READ_PATH + name
+        benchmark_to_csv(filepath, gpu_data)
+        shutil.move(filepath, BENCHMARK_MOVE_PATH)
+
+    end_timer()
+
+
+def benchmark_to_csv(filepath, gpu_data):
     stats = load_stats()
 
     if DEBUG["nameMatching"]:
         debug_file = open(DEBUG_PATH, 'w')
-        debug_file.write('device_name,matched_key,score\n')
 
-    with open(file=GPU_READ_PATH) as gpu_datafile:
-        GPUs = json.load(gpu_datafile)
-
-    with open(BENCHMARK_READ_PATH) as infile, open(WRITE_PATH, 'w') as outfile:
-
-        outfile.write("heading\n")
+    with open(filepath) as infile:
 
         if DEBUG["loopLimit"]:
             counter = 1
+
+        content = ''
 
         for line in infile:
 
@@ -48,16 +65,21 @@ def main() -> None:
             if data["schema_version"] != 'v3':
                 continue
 
-            device_name = data['data'][0]["device_info"]["compute_devices"][0]["name"]
             device_type = data['data'][0]["device_info"]["device_type"]
-
             stats["totalAnalyzed"] += 1
 
             if device_type == "CPU":
                 continue
             stats["totalGPUAnalyzed"] += 1
 
-            found_key, score = find_gpu_key(device_name, GPUs)
+            device_name = data['data'][0]["device_info"]["compute_devices"][0]["name"]
+
+            found_key, score = find_gpu_key(device_name, gpu_data)
+
+            if found_key is None:
+                stats["noMatch"] += 1
+                continue
+
             if score == 1:
                 stats["perfectMatch"] += 1
 
@@ -67,12 +89,26 @@ def main() -> None:
 
                 stats["guessedMatch"] += 1
 
+            fieldAttributes = {
+                "renderedObject": data["data"][0]["scene"]["label"],
+                "renderTime": data['data'][0]["stats"]["render_time_no_sync"],
+                "gpuName": device_name,
+                "gpuBackend": device_type,
+                "peakMemory": data['data'][0]["stats"]["device_peak_memory"]
+            }
+
+            row = tuple(fieldAttributes.values()) + tuple(gpu_data[found_key].values())
+            content += ','.join(map(str, row)) + '\n'
+
             if DEBUG["loopLimit"]:
                 if counter == DEBUG["loopLimitVal"]:
                     break
                 counter += 1
 
-    end_timer()
+    with open(WRITE_PATH, 'a') as outfile:
+        outfile.write(','.join(BENCHMARK_METRICS + GPU_METRICS) + '\n')
+        outfile.write(content)
+
     save_stats(stats)
 
     if DEBUG["nameMatching"]:
@@ -80,7 +116,7 @@ def main() -> None:
 
 
 if __name__ == '__main__':
-    main()
+    process_benchmark_file()
 
 
 json_entry = {
