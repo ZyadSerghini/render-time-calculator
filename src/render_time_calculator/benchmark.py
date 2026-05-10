@@ -2,7 +2,7 @@ import json
 import os
 import shutil
 
-from render_time_calculator.stats.stats import (
+from render_time_calculator.stats import (
     end_timer,
     load_stats,
     save_stats,
@@ -23,7 +23,7 @@ DEBUG = {
 }
 DEBUG_PATH = "data/debug/GPU_name_matching.csv"
 
-BENCHMARK_METRICS = ('renderedObject', 'renderTime', 'gpuName', 'gpuBackend', 'peakMemory')
+BENCHMARK_METRICS = ('renderedObject', 'renderTime', 'gpuName', 'gpuBackend')
 GPU_METRICS = ('releaseYear', 'baseClock', 'boostClock', 'textureRate', 'pixelRate', 'architecture', 'memoryType', 'generation', 'busInterface', 'rtCores', 'tensorCores')
 
 
@@ -93,8 +93,7 @@ def benchmark_to_csv(filepath, gpu_data):
                 "renderedObject": data["data"][0]["scene"]["label"],
                 "renderTime": data['data'][0]["stats"]["render_time_no_sync"],
                 "gpuName": device_name,
-                "gpuBackend": device_type,
-                "peakMemory": data['data'][0]["stats"]["device_peak_memory"]
+                "gpuBackend": device_type
             }
 
             row = tuple(fieldAttributes.values()) + tuple(gpu_data[found_key].values())

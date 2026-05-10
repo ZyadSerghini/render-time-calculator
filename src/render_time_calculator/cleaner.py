@@ -17,7 +17,7 @@ PARTIAL_METRICS = (
            'tensorCores'
 )
 
-DEBUG = True
+DEBUG = False
 
 with open(f'data/raw/{INPUT_FILE}') as infile:
     content = eval(infile.read())

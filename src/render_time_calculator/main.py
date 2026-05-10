@@ -1,4 +1,4 @@
-from render_time_calculator.data_cleaning.cleaner import process_benchmark_file
+from render_time_calculator.benchmark import process_benchmark_file
 
 
 def main() -> None:

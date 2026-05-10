@@ -193,7 +193,7 @@ def find_gpu_key(input_name: str, gpu_data: dict, threshold: float = 0.88):
 
 if __name__ == '__main__':
 
-    from cleaner import GPU_READ_PATH
+    from render_time_calculator.benchmark import GPU_READ_PATH
 
     with open(GPU_READ_PATH, encoding="utf-8") as f:
         gpu_data = json.load(f)
