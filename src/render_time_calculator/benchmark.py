@@ -8,10 +8,8 @@ from render_time_calculator.handlers import (
     handleV4,
 )
 from render_time_calculator.matching import (
-    extract_model_numbers,
-    extract_model_signatures,
+    build_gpu_index,
     find_gpu_key,
-    normalize_gpu_name,
 )
 from render_time_calculator.stats import (
     end_timer,
@@ -77,12 +75,7 @@ def benchmark_to_csv(filepath, gpu_data):
         match_cache = {}
 
         gpu_index = {}
-        for key in gpu_data:
-            gpu_index[key] = {
-                "normalized": normalize_gpu_name(key),
-                "numbers": extract_model_numbers(key),
-                "signatures": extract_model_signatures(key),
-    }
+        gpu_index = build_gpu_index(gpu_data)
 
         for line in infile:
 

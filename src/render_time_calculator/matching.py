@@ -1,4 +1,3 @@
-import json
 import re
 from difflib import SequenceMatcher
 
@@ -22,6 +21,51 @@ MODEL_SUFFIX_WORDS = {
     "x",
     "pro",
 }
+
+STRICT_CANDIDATE_VARIANTS = {
+    "oem",
+    "mobile",
+    "maxq",
+}
+
+
+def extract_variant_flags(name: str) -> set[str]:
+    raw = name.lower()
+    flags = set()
+
+    if re.search(r"\boem\b", raw):
+        flags.add("oem")
+
+    if re.search(r"\blaptop\b|\bmobile\b|\bmobility\b", raw):
+        flags.add("mobile")
+
+    if re.search(r"\bmax[-\s]?q\b", raw):
+        flags.add("maxq")
+
+    return flags
+
+
+def variants_are_compatible(input_variants: set[str], candidate_variants: set[str]) -> bool:
+    """
+    Candidate-specific variants should not be guessed.
+
+    Example:
+      input:     GeForce RTX 3050
+      candidate: GeForce RTX 3050 OEM
+      -> reject, because OEM was not present in input
+
+      input:     GeForce RTX 3050 Laptop GPU
+      candidate: GeForce RTX 3050
+      -> allow, because base card may be the closest available fallback
+
+      input:     GeForce RTX 3050
+      candidate: GeForce RTX 3050 Laptop GPU
+      -> reject, because Laptop was not present in input
+    """
+    candidate_strict_variants = candidate_variants & STRICT_CANDIDATE_VARIANTS
+    missing_from_input = candidate_strict_variants - input_variants
+
+    return not missing_from_input
 
 
 def normalize_gpu_name(name: str) -> str:
@@ -53,6 +97,18 @@ def normalize_gpu_name(name: str) -> str:
     name = re.sub(r"\b\d+\s*-?\s*cores?\s+processor\b", "", name)
 
     return name
+
+
+def build_gpu_index(gpu_data: dict) -> dict:
+    return {
+        key: {
+            "normalized": normalize_gpu_name(key),
+            "numbers": extract_model_numbers(key),
+            "signatures": extract_model_signatures(key),
+            "variants": extract_variant_flags(key),
+        }
+        for key in gpu_data.keys()
+    }
 
 
 def tokenize_gpu_name(name: str) -> list[str]:
@@ -165,15 +221,25 @@ def find_gpu_key(input_name: str, gpu_data: dict, gpu_index: dict, threshold: fl
     normalized_input = normalize_gpu_name(input_name)
     input_numbers = extract_model_numbers(input_name)
     input_signatures = extract_model_signatures(input_name)
+    input_variants = extract_variant_flags(input_name)
 
     best_key = None
     best_score = 0.0
 
     for key, meta in gpu_index.items():
-        if input_numbers and input_numbers != meta["numbers"]:
+        # Hard reject if numbers do not match exactly.
+        # This also prevents no-number inputs from matching numbered GPUs.
+        if input_numbers != meta["numbers"]:
             continue
 
+        # Hard reject bad letter+number model matches.
+        # Example: P2000 should not match T2000.
         if input_signatures and input_signatures != meta["signatures"]:
+            continue
+
+        # Hard reject candidate-only variants.
+        # Example: RTX 3050 should not match RTX 3050 OEM.
+        if not variants_are_compatible(input_variants, meta["variants"]):
             continue
 
         score = similarity(normalized_input, meta["normalized"])
@@ -186,28 +252,3 @@ def find_gpu_key(input_name: str, gpu_data: dict, gpu_index: dict, threshold: fl
         return best_key, best_score, True
 
     return None, best_score, False
-
-
-# Usage
-
-if __name__ == '__main__':
-
-    from render_time_calculator.benchmark import GPU_READ_PATH
-
-    with open(GPU_READ_PATH, encoding="utf-8") as f:
-        gpu_data = json.load(f)
-
-    #  print(find_gpu_key("Quadro T1000 with Max-Q Design", gpu_data))
-
-    quit()
-
-    examples = [
-        "Radeon RX 570 Series",
-        "GeForce GTX 1660 Ti with Max-Q Design",
-        "GeForce RTX 3070 Laptop GPU",
-        "GeForce GTX 1060 6GB",
-    ]
-
-    for name in examples:
-        key, score = find_gpu_key(name, gpu_data)
-        print(name, "=>", key, score)
