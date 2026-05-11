@@ -1,6 +1,7 @@
 .venv
+.vscode
 .ruff_cache
-data/processed/benchmark-processed-files/*.jsonl
-data/raw/benchmark-input-files/*.jsonl
 opendata-2026-04-10-000000+0000.jsonl
 __pycache__/
+data/processed/cleaned_data.csv
+data/raw/opendata-2026-04-11-000000+0000.jsonl

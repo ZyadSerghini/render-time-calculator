@@ -1,6 +1,8 @@
 import json
 
-INPUT_FILE, OUTPUT_FILE = "gpu-raw-data.json", "gpu-data.json"
+INPUT_FILE, OUTPUT_FILE = 'data/raw/gpu-raw-data.json', 'data/processed/gpu-data.json'
+
+OUTPUT_NAMES_PATH = 'data/debug/GPU_names.txt'
 
 METRICS = ('baseClock',
            'boostClock',
@@ -19,50 +21,66 @@ PARTIAL_METRICS = (
 
 DEBUG = False
 
-with open(f'data/raw/{INPUT_FILE}') as infile:
-    content = eval(infile.read())
 
-new_content = dict()
+def clean_GPUs(input_file=INPUT_FILE, output_file=OUTPUT_FILE):
+    '''
+    Skipping:
+        - Any GPU released before 2008
+        - The 56 remaining GPUs that do not have "busInterface" as an attribute because they are gaming consoles/handhelds GPUs.
+        - The 27 remaining GPUs that do not have "pixelRate" as an attribute because they are not not desktop/laptop GPUs.
+    '''
 
-counter = 0
+    with open(input_file) as infile:
+        content = eval(infile.read())
 
-for entry in content:
-    entry_name = entry["name"]
-    entry_releaseDate = entry["releaseDate"][:4]
+    new_content = dict()
 
-    # Skipping:
-    # - Any GPU released before 2008
-    # - The 56 remaining GPUs that do not have "busInterface" as an attribute because they are gaming consoles/handhelds GPUs.
-    # - The 27 remaining GPUs that do not have "pixelRate" as an attribute because they are not not desktop/laptop GPUs.
+    counter = 0
 
-    if int(entry_releaseDate) < 2008:
-        continue
+    for entry in content:
+        entry_name = entry['name']
+        entry_releaseDate = entry['releaseDate'][:4]
 
-    if any(metric not in entry for metric in ('busInterface', 'pixelRate')):
-        continue
+        if int(entry_releaseDate) < 2008:
+            continue
 
-    attributes = {'releaseYear': entry_releaseDate}
+        if any(metric not in entry for metric in ('busInterface', 'pixelRate')):
+            continue
 
-    try:
-        for met in METRICS:
-            attributes[met] = entry[met]
+        attributes = {'releaseYear': entry_releaseDate}
 
-        for met in PARTIAL_METRICS:
-            if met not in entry.keys():
-                attributes[met] = 0
-            else:
+        try:
+            for met in METRICS:
                 attributes[met] = entry[met]
 
-    except KeyError as e:
-        if DEBUG:
-            print(e, entry_name)
-        counter += 1
+            for met in PARTIAL_METRICS:
+                if met not in entry.keys():
+                    attributes[met] = 0
+                else:
+                    attributes[met] = entry[met]
 
-    new_content[entry["name"]] = attributes
+        except KeyError as e:
+            if DEBUG:
+                print(e, entry_name)
+            counter += 1
+
+        new_content[entry['name']] = attributes
+
+    if DEBUG and counter != 0:
+        print(counter)
+
+    with open(output_file, 'w') as file:
+        json.dump(new_content, file, indent=4)
 
 
-if DEBUG and counter != 0:
-    print(counter)
+def get_GPU_names(input_file=INPUT_FILE, output_file=OUTPUT_NAMES_PATH):
+    '''
+    List all GPU names in output_file, purely for debugging purposes.
+    '''
 
-with open(f'data/processed/{OUTPUT_FILE}', "w") as file:
-    json.dump(new_content, file, indent=4)
+    with open(input_file) as infile:
+        content = eval(infile.read())
+
+    with open(output_file, 'w') as outfile:
+        for key in content:
+            outfile.write(f'{key['name']}\n')

@@ -158,35 +158,34 @@ def similarity(a: str, b: str) -> float:
     return SequenceMatcher(None, a, b).ratio()
 
 
-def find_gpu_key(input_name: str, gpu_data: dict, threshold: float = 0.88):
+def find_gpu_key(input_name: str, gpu_data: dict, gpu_index: dict, threshold: float = 0.88):
     if input_name in gpu_data:
-        return input_name, 1.0
+        return input_name, 1.0, True
 
     normalized_input = normalize_gpu_name(input_name)
+    input_numbers = extract_model_numbers(input_name)
+    input_signatures = extract_model_signatures(input_name)
 
     best_key = None
     best_score = 0.0
 
-    for key in gpu_data.keys():
-        # Hard reject bad number matches
-        if not numbers_are_compatible(input_name, key):
+    for key, meta in gpu_index.items():
+        if input_numbers and input_numbers != meta["numbers"]:
             continue
 
-        # Hard reject bad letter+number model matches
-        # Example: P2000 should not match T2000
-        if not model_signatures_are_compatible(input_name, key):
+        if input_signatures and input_signatures != meta["signatures"]:
             continue
 
-        score = similarity(normalized_input, normalize_gpu_name(key))
+        score = similarity(normalized_input, meta["normalized"])
 
         if score > best_score:
             best_score = score
             best_key = key
 
     if best_score >= threshold:
-        return best_key, best_score
+        return best_key, best_score, True
 
-    return None, best_score
+    return None, best_score, False
 
 
 # Usage
@@ -198,7 +197,7 @@ if __name__ == '__main__':
     with open(GPU_READ_PATH, encoding="utf-8") as f:
         gpu_data = json.load(f)
 
-    print(find_gpu_key("Quadro T1000 with Max-Q Design", gpu_data))
+    #  print(find_gpu_key("Quadro T1000 with Max-Q Design", gpu_data))
 
     quit()
 
