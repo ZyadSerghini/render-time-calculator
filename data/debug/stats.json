@@ -1,7 +1,7 @@
 {
-    "totalAnalyzed": 408657,
-    "totalGPUAnalyzed": 524068,
-    "perfectMatch": 405914,
-    "guessedMatch": 8674,
-    "noMatch": 109480
+    "totalAnalyzed": 0,
+    "totalGPUAnalyzed": 0,
+    "perfectMatch": 0,
+    "guessedMatch": 0,
+    "noMatch": 0
 }
