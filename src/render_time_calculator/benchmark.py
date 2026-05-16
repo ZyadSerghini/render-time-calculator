@@ -30,7 +30,7 @@ DEBUG = {
     "loopLimit": False,
     "loopLimitVal": 1
 }
-BENCHMARK_METRICS = ('renderedObject', 'renderTime', 'gpuName', 'gpuBackend')
+BENCHMARK_METRICS = ('renderTime', 'renderedObject', 'gpuName', 'gpuBackend')
 GPU_METRICS = ('releaseYear', 'baseClock', 'boostClock', 'textureRate', 'pixelRate', 'architecture', 'memoryType', 'generation', 'busInterface', 'rtCores', 'tensorCores')
 
 HANDLERS = {
