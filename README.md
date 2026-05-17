@@ -1,6 +1,6 @@
 # Render Time Calculator
 
-This project has been made as an Honors Assignment for the BAI 3301 Introduction to Business Analytics with professor Hayat El Asri. 
+This project has been made as an Honors Assignment for the BAI 3301 Introduction to Business Analytics with professor Hayat El Asri.
 
 It uses machine learning to estimate the render time of 3D benchmark scenes based on GPU specifications and rendering backend information.
 
@@ -82,6 +82,10 @@ The results show that the Random Forest model with a log-transformed target perf
 
 The model could be improved by removing or capping extreme render time outliers, adding more detailed GPU and system information, and tuning the model hyperparameters more carefully. Another improvement would be to save the best trained model for each rendered object and create a prediction script that allows a user to input GPU specifications and receive an estimated render time. The project could also compare results with and without `gpuName` to see how much accuracy is gained by allowing the model to recognize specific GPUs.
 
+## Limitations
+
+This project is intended as a class machine learning experiment, not as a production-grade render time predictor. The dataset contains extreme render time outliers, and the model does not include every possible factor that affects rendering performance, such as CPU, RAM, driver version, operating system, Blender version, cooling, power limits, or background system load.
+
 ## How to Run
 
 Install the required dependencies:
@@ -125,7 +129,3 @@ The output files are saved to:
 ```text
 data/processed/models/
 ```
-
-## Limitations
-
-This project is intended as a class machine learning experiment, not as a production-grade render time predictor. The dataset contains extreme render time outliers, and the model does not include every possible factor that affects rendering performance, such as CPU, RAM, driver version, operating system, Blender version, cooling, power limits, or background system load.
