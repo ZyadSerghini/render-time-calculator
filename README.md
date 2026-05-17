@@ -2,10 +2,24 @@
 
 This project has been made as an Honors Assignment for the BAI 3301 Introduction to Business Analytics with professor Hayat El Asri.
 
-It uses machine learning to estimate the render time of 3D benchmark scenes based on GPU specifications and rendering backend information.
-
 The GPU specification data used in this project comes from the [RightNow GPU Database](https://github.com/RightNow-AI/RightNow-GPU-Database).  
 The Blender benchmark render data comes from [Blender Open Data](https://opendata.blender.org/).
+
+## Outline
+
+- [Summary](#summary)
+- [Dataset](#dataset)
+- [Data Cleaning](#data-cleaning)
+- [Method](#method)
+- [Results](#results)
+- [Interpretation of the Output](#interpretation-of-the-output)
+- [Suggestions for Further Improvement](#suggestions-for-further-improvement)
+- [Limitations](#limitations)
+- [How to Run](#how-to-run)
+
+## Summary
+
+This project builds a machine learning pipeline that combines Blender benchmark render results with GPU hardware specifications to estimate render time for different 3D scenes. The workflow starts with a large raw `.jsonl` benchmark file, cleans and merges it with GPU specification data, and produces a structured `cleaned_data.csv` file for modeling. The final experiment trains separate models for each rendered object and compares several regression approaches using cross-validation. The results show that Random Forest with a log-transformed target performed best for most objects, although prediction quality varies because the dataset contains extreme render time outliers.
 
 ## Dataset
 
@@ -16,7 +30,7 @@ The raw benchmark file should be placed in:
 
 ```text
 data/raw/
-````
+```
 
 The cleaned dataset produced by the project is:
 
@@ -44,6 +58,10 @@ The main features used are:
 
 The `gpuName` feature was excluded to reduce memorization of specific GPU names.
 The `releaseYear` feature was removed from the final experiment.
+
+## Data Cleaning
+
+The original Blender benchmark data comes as a large `.jsonl` file, where each line represents one benchmark entry. The cleaning script reads the file line by line, extracts the render result information, and keeps the values needed for this project, such as `renderedObject`, `gpuBackend`, and `renderTime`. The script then matches each benchmark entry with GPU specification data from the RightNow GPU Database so that each render result also includes hardware features such as clock speed, texture rate, pixel rate, memory type, architecture, RT cores, and tensor cores. Rows that do not contain the required fields or contain invalid render times are removed. The final cleaned dataset is written to `data/processed/cleaned_data.csv`, which is then used as the input for the machine learning model comparison.
 
 ## Method
 
