@@ -23,7 +23,7 @@ dev = [
 dependencies = []
 
 [project.scripts]
-python-template = "python_template:main"
+render-time-calculator = "render_time_calculator.main:main"
 
 [build-system]
 requires = ["uv_build>=0.9.18,<0.10.0"]
